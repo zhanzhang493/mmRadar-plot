@@ -245,8 +245,10 @@ if __name__ == '__main__':
     NUM_CHIRP_PER_VARRAY = np.shape(DATA)[1]
     # WIN_SAMPLE = hanning(CFG['num_sample'], 'periodic')
     WIN_SAMPLE = chebyshev(CFG['num_sample'], 80)
+    WIN_SAMPLE = WIN_SAMPLE / np.sqrt(np.sum(WIN_SAMPLE * WIN_SAMPLE) / len(WIN_SAMPLE))
     # WIN_CHIRP = hanning(NUM_CHIRP_PER_VARRAY, 'periodic')
     WIN_CHIRP = chebyshev(NUM_CHIRP_PER_VARRAY, 80)
+    WIN_CHIRP = WIN_CHIRP / np.sqrt(np.sum(WIN_CHIRP * WIN_CHIRP) / len(WIN_CHIRP))
     WIN_ANTENNA = np.ones(NUM_VIRTUAL_ANTENNA)
     WIN = np.outer(WIN_CHIRP, np.outer(WIN_ANTENNA, WIN_SAMPLE)).reshape(NUM_CHIRP_PER_VARRAY,
                                                                          NUM_VIRTUAL_ANTENNA,
