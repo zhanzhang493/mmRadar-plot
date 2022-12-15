@@ -146,20 +146,46 @@ def load_raw_adc_data(data_path, file_name, cfg):
     return raw_data, data
 
 
-if __name__ == '__main__':
+def dc_cal(data):
+    num_chirp, num_rx, num_sample = np.shape(data)
+    dc_data = np.zeros((num_chirp, num_rx))
+    data_cal = np.zeros(np.shape(data))
+    for c in range(num_chirp):
+        for m in range(num_rx):
+            dc_data[c, m] = np.average(data[c, m, :])
+            data_cal[c, m, :] = data[c, m, :] - dc_data[c, m]
+    return data_cal, dc_data
 
+
+def dc_cal_multi_frame(data):
+    if np.shape(data) == 3:
+        num_chirp, num_rx, num_sample = np.shape(data)
+        data_cal, dc_data = dc_cal(data)
+        data_cal.reshape(1, num_chirp, num_rx, num_sample)
+        dc_data.reshape(1, num_chirp, num_rx)
+    else:
+        num_frame, num_chirp, num_rx, num_sample = np.shape(data)
+        dc_data = np.zeros((num_frame, num_chirp, num_rx))
+        data_cal = np.zeros(np.shape(data))
+        for f in range(num_frame):
+            data_cal[f, :, :, :], dc_data[f, :, :] = dc_cal(data[f])
+
+    return data_cal, dc_data
+
+
+if __name__ == '__main__':
 
     CFG = {
         # data info
-        'data_path': 'C:/Calterah/CalterahClient/data/20221206-202108',
+        'data_path': 'C:/Calterah/CalterahClient/data/20221215-142609',
         'file_name': '_sampling0.dat',
 
         # data configuration
-        'num_frame': 100,
+        'num_frame': 10,
         'num_chirp': 256,
         'num_antenna': 4,
         'num_sample': 1024,
-        'v_array': 2,
+        'v_array': 1,
 
         # fft ctrl
         'sample_rate': 50,
@@ -167,13 +193,19 @@ if __name__ == '__main__':
         'v_fft_factor': 1,
 
         # plot ctrl
-        'show_frame': 0,
-        'pdf_enable': True,
+        'show_frame': 5,
+        'average_frame': True,
+        'dc_cal': False,
+        'pdf_enable': False,
     }
 
+    NUM_FRAME = CFG['num_frame']
     DATA_PATH = CFG['data_path']
     FILE_NAME = CFG['file_name']
-    SAVE_PATH = mkdir(FILE_NAME)
+
+    if CFG['pdf_enable']:
+        SAVE_PATH = mkdir(FILE_NAME)
+
     SHOW_FRAME = CFG['show_frame']
     SAMPLE_RATE = CFG['sample_rate'] * 1e6
 
@@ -184,6 +216,11 @@ if __name__ == '__main__':
     T_AXIS_N = np.arange(CFG['num_sample'])
 
     RAW_DATA, DATA = load_raw_adc_data(DATA_PATH, FILE_NAME, CFG)
+
+    if CFG['dc_cal']:
+        DATA_DC_CAL, DC_DATA = dc_cal_multi_frame(DATA)
+        print('[DC info]: ', DC_DATA[SHOW_FRAME, :, :])
+        print(DC_DATA[SHOW_FRAME, :, :])
 
     """ Plot """
     FIG_TIME = create_multi_fig(fig_size=(80, 30))
@@ -196,8 +233,12 @@ if __name__ == '__main__':
         TITLE = 'Chirp 0' + ' - ' + 'Rx' + str(RX)
         X_LABEL = 'Time - us'
         Y_LABEL = 'Amplitude'
-        plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, 0, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                     TITLE, X_LABEL, Y_LABEL)
+        if CFG['dc_cal']:
+            plot_sub_fig(T_AXIS_N, DATA_DC_CAL[SHOW_FRAME, 0, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
+        else:
+            plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, 0, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
 
         SUB_FIG = NUM_VIRTUAL_ANTENNA + k + 1
 
@@ -205,24 +246,36 @@ if __name__ == '__main__':
         TITLE = 'Chirp 0 - 2' + ' - ' + 'Rx' + str(RX)
         X_LABEL = 'Time - us'
         Y_LABEL = 'Amplitude'
-        plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, 0:3, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                     TITLE, X_LABEL, Y_LABEL)
+        if CFG['dc_cal']:
+            plot_sub_fig(T_AXIS_N, DATA_DC_CAL[SHOW_FRAME, 0:3, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
+        else:
+            plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, 0:3, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
 
         SUB_FIG = 2 * NUM_VIRTUAL_ANTENNA + k + 1
         RX = k
         TITLE = 'Chirp 0 - 9' + ' - ' + 'Rx' + str(RX)
         X_LABEL = 'Time - us'
         Y_LABEL = 'Amplitude'
-        plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, 0:10, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                     TITLE, X_LABEL, Y_LABEL)
+        if CFG['dc_cal']:
+            plot_sub_fig(T_AXIS_N, DATA_DC_CAL[SHOW_FRAME, 0:10, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
+        else:
+            plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, 0:10, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
 
         SUB_FIG = 3 * NUM_VIRTUAL_ANTENNA + k + 1
         RX = k
         TITLE = 'All Chirp' + ' - ' + 'Rx' + str(RX)
         X_LABEL = 'Time - us'
         Y_LABEL = 'Amplitude'
-        plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, :, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                     TITLE, X_LABEL, Y_LABEL)
+        if CFG['dc_cal']:
+            plot_sub_fig(T_AXIS_N, DATA_DC_CAL[SHOW_FRAME, :, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
+        else:
+            plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, :, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
     if CFG['pdf_enable']:
         FIG_TIME.savefig(os.path.join(SAVE_PATH, CURRENT_TIME + '_' + 'Time_Frame' + str(SHOW_FRAME) + '.pdf'))
 
@@ -246,8 +299,12 @@ if __name__ == '__main__':
     RANGE_F_AXIS = np.arange(RANGE_FFT_SIZE // 2) / RANGE_FFT_SIZE * CFG['sample_rate']
     RANGE_F_AXIS_N = np.arange(RANGE_FFT_SIZE // 2)
 
-    DATA_R_F = np.fft.fft(DATA[SHOW_FRAME] * WIN, axis=-1, n=RANGE_FFT_SIZE)
-    DATA_R_F_dB = 20 * np.log10(np.abs(DATA_R_F))
+    if CFG['dc_cal']:
+        DATA_R_F = np.fft.fft(DATA_DC_CAL[SHOW_FRAME] * WIN, axis=-1, n=RANGE_FFT_SIZE)
+        DATA_R_F_dB = 20 * np.log10(np.abs(DATA_R_F))
+    else:
+        DATA_R_F = np.fft.fft(DATA[SHOW_FRAME] * WIN, axis=-1, n=RANGE_FFT_SIZE)
+        DATA_R_F_dB = 20 * np.log10(np.abs(DATA_R_F))
 
     """ Plot """
     FIG_RFFT = create_multi_fig(fig_size=(80, 10))
@@ -290,7 +347,7 @@ if __name__ == '__main__':
 
         SUB_FIG = NUM_VIRTUAL_ANTENNA + k + 1
         RX = k
-        TITLE = '2dFFT-v - ' + 'Rx' + str(RX)
+        TITLE = '2dFFT-V - ' + 'Rx' + str(RX)
         X_LABEL = 'Velocity - Bin'
         Y_LABEL = 'Magnitude - dB'
         plot_sub_fig(VEL_F_AXIS_N, DATA_R_V_F_dB[:, RX, :RANGE_FFT_SIZE//2].T, FIG_RVFFT, NUM_ROW, NUM_COL, SUB_FIG,
@@ -322,5 +379,62 @@ if __name__ == '__main__':
         save_yaml(SAVE_PATH, CURRENT_TIME, CFG)
 
     """##############################################################################################################"""
-    # plt.show()
+    """ Average power """
+    if CFG['average_frame']:
+        if CFG['dc_cal']:
+            DATA_ALL_R_F = np.fft.fft(DATA_DC_CAL * WIN, axis=-1, n=RANGE_FFT_SIZE)
+            DATA_ALL_R_F_SUM = 1 / NUM_FRAME * np.sum(np.abs(DATA_ALL_R_F) ** 2, axis=0)
+            DATA_ALL_R_F_SUM_dB = 10 * np.log10(np.abs(DATA_ALL_R_F_SUM))
+
+            DATA_ALL_R_V_F = np.fft.fftshift(np.fft.fft(DATA_ALL_R_F, axis=-3, n=VEL_FFT_SIZE), axes=-3)
+            DATA_ALL_R_V_F_SUM = 1 / NUM_FRAME * np.sum(np.abs(DATA_ALL_R_V_F) ** 2, axis=0)
+            DATA_ALL_R_V_F_SUM_dB = 10 * np.log10(np.abs(DATA_ALL_R_V_F_SUM))
+
+        else:
+            DATA_ALL_R_F = np.fft.fft(DATA * WIN, axis=-1, n=RANGE_FFT_SIZE)
+            DATA_ALL_R_F_SUM = 1 / NUM_FRAME * np.sum(np.abs(DATA_ALL_R_F) ** 2, axis=0)
+            DATA_ALL_R_F_SUM_dB = 10 * np.log10(np.abs(DATA_ALL_R_F_SUM))
+
+            DATA_ALL_R_V_F = np.fft.fftshift(np.fft.fft(DATA_ALL_R_F, axis=-3, n=VEL_FFT_SIZE), axes=-3)
+            DATA_ALL_R_V_F_SUM = 1 / NUM_FRAME * np.sum(np.abs(DATA_ALL_R_V_F) ** 2, axis=0)
+            DATA_ALL_R_V_F_SUM_dB = 10 * np.log10(np.abs(DATA_ALL_R_V_F_SUM))
+
+        FIG_RVAFFT = create_multi_fig(fig_size=(80, 35))
+
+        NUM_ROW = 3
+        NUM_COL = NUM_VIRTUAL_ANTENNA
+        for k in range(NUM_VIRTUAL_ANTENNA):
+            SUB_FIG = k + 1
+            RX = k
+            TITLE = 'Average 1dFFT' + ' - ' + 'Rx' + str(RX)
+            X_LABEL = 'Time - us'
+            Y_LABEL = 'Amplitude'
+            plot_sub_fig(RANGE_F_AXIS_N, DATA_ALL_R_F_SUM_dB[:, RX, :RANGE_FFT_SIZE // 2],
+                         FIG_RVAFFT, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
+
+            SUB_FIG = NUM_VIRTUAL_ANTENNA + k + 1
+            RX = k
+            TITLE = 'Average 2dFFT-R - ' + 'Rx' + str(RX)
+            X_LABEL = 'Range - Bin'
+            Y_LABEL = 'Magnitude - dB'
+            plot_sub_fig(RANGE_F_AXIS_N, DATA_ALL_R_V_F_SUM_dB[:, RX, :RANGE_FFT_SIZE // 2],
+                         FIG_RVAFFT, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
+
+            SUB_FIG = 2 * NUM_VIRTUAL_ANTENNA + k + 1
+            RX = k
+            TITLE = 'Average 2dFFT-V - ' + 'Rx' + str(RX)
+            X_LABEL = 'Velocity - Bin'
+            Y_LABEL = 'Magnitude - dB'
+            plot_sub_fig(VEL_F_AXIS_N, DATA_ALL_R_V_F_SUM_dB[:, RX, :RANGE_FFT_SIZE // 2].T,
+                         FIG_RVAFFT, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
+
+        if CFG['pdf_enable']:
+            FIG_RVAFFT.savefig(os.path.join(SAVE_PATH, CURRENT_TIME + '_' + 'RVAFFT_Frame' + str(SHOW_FRAME) + '.pdf'))
+
+    """##############################################################################################################"""
+    if not CFG['pdf_enable']:
+        plt.show()
     # max_index = np.unravel_index(np.argmax(sig_mat_dB, axis=None), sig_mat_dB.shape)
