@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
     CFG = {
         # data info
-        'data_path': 'C:/Calterah/CalterahClient/data/AGC_Flow/20221216-112036',  # gain [2 4 4], hp2=6, B=1500, 100
+        'data_path': 'C:/Calterah/CalterahClient/data/AGC_Flow/20221216-111550',  # gain [2 4 4], hp2=6, B=1500, 100
         'file_name': '_sampling0.dat',
 
         # data configuration
@@ -223,63 +223,7 @@ if __name__ == '__main__':
         DATA_DC_CAL, DC_DATA = dc_cal_multi_frame(DATA)
         print('[DC info]: ', DC_DATA[SHOW_FRAME, :, :])
         print(DC_DATA[SHOW_FRAME, :, :])
-
-    """ Plot """
-    FIG_TIME = create_multi_fig(fig_size=(80, 30))
     NUM_VIRTUAL_ANTENNA = np.shape(DATA)[2]
-    NUM_ROW = 4
-    NUM_COL = NUM_VIRTUAL_ANTENNA
-    for k in range(NUM_VIRTUAL_ANTENNA):
-        SUB_FIG = k + 1
-        RX = k
-        TITLE = 'Chirp 0' + ' - ' + 'Rx' + str(RX)
-        X_LABEL = 'Time - us'
-        Y_LABEL = 'Amplitude'
-        if CFG['dc_cal']:
-            plot_sub_fig(T_AXIS_N, DATA_DC_CAL[SHOW_FRAME, 0, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                         TITLE, X_LABEL, Y_LABEL)
-        else:
-            plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, 0, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                         TITLE, X_LABEL, Y_LABEL)
-
-        SUB_FIG = NUM_VIRTUAL_ANTENNA + k + 1
-
-        RX = k
-        TITLE = 'Chirp 0 - 2' + ' - ' + 'Rx' + str(RX)
-        X_LABEL = 'Time - us'
-        Y_LABEL = 'Amplitude'
-        if CFG['dc_cal']:
-            plot_sub_fig(T_AXIS_N, DATA_DC_CAL[SHOW_FRAME, 0:3, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                         TITLE, X_LABEL, Y_LABEL)
-        else:
-            plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, 0:3, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                         TITLE, X_LABEL, Y_LABEL)
-
-        SUB_FIG = 2 * NUM_VIRTUAL_ANTENNA + k + 1
-        RX = k
-        TITLE = 'Chirp 0 - 9' + ' - ' + 'Rx' + str(RX)
-        X_LABEL = 'Time - us'
-        Y_LABEL = 'Amplitude'
-        if CFG['dc_cal']:
-            plot_sub_fig(T_AXIS_N, DATA_DC_CAL[SHOW_FRAME, 0:10, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                         TITLE, X_LABEL, Y_LABEL)
-        else:
-            plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, 0:10, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                         TITLE, X_LABEL, Y_LABEL)
-
-        SUB_FIG = 3 * NUM_VIRTUAL_ANTENNA + k + 1
-        RX = k
-        TITLE = 'All Chirp' + ' - ' + 'Rx' + str(RX)
-        X_LABEL = 'Time - us'
-        Y_LABEL = 'Amplitude'
-        if CFG['dc_cal']:
-            plot_sub_fig(T_AXIS_N, DATA_DC_CAL[SHOW_FRAME, :, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                         TITLE, X_LABEL, Y_LABEL)
-        else:
-            plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, :, RX, :], FIG_TIME, NUM_ROW, NUM_COL, SUB_FIG,
-                         TITLE, X_LABEL, Y_LABEL)
-    if CFG['pdf_enable']:
-        FIG_TIME.savefig(os.path.join(SAVE_PATH, CURRENT_TIME + '_' + 'Time_Frame' + str(SHOW_FRAME) + '.pdf'))
 
     """##############################################################################################################"""
     """ window """
@@ -308,22 +252,6 @@ if __name__ == '__main__':
         DATA_R_F = np.fft.fft(DATA[SHOW_FRAME] * WIN, axis=-1, n=RANGE_FFT_SIZE)
         DATA_R_F_dB = 20 * np.log10(np.abs(DATA_R_F))
 
-    """ Plot """
-    FIG_RFFT = create_multi_fig(fig_size=(80, 10))
-    NUM_ROW = 1
-    NUM_COL = NUM_VIRTUAL_ANTENNA
-    for k in range(NUM_VIRTUAL_ANTENNA):
-        SUB_FIG = k + 1
-        RX = k
-        TITLE = 'All Chirp' + ' - ' + 'Rx' + str(RX)
-        X_LABEL = 'Time - us'
-        Y_LABEL = 'Amplitude'
-        plot_sub_fig(RANGE_F_AXIS, DATA_R_F_dB[:, RX, :RANGE_FFT_SIZE//2], FIG_RFFT, NUM_ROW, NUM_COL, SUB_FIG,
-                     TITLE, X_LABEL, Y_LABEL)
-
-    if CFG['pdf_enable']:
-        FIG_RFFT.savefig(os.path.join(SAVE_PATH, CURRENT_TIME + '_' + 'RFFT_Frame' + str(SHOW_FRAME) + '.pdf'))
-
     """##############################################################################################################"""
     """ 2D-FFT """
     VEL_FFT_SIZE = NUM_CHIRP_PER_VARRAY * CFG['v_fft_factor']
@@ -332,53 +260,6 @@ if __name__ == '__main__':
 
     DATA_R_V_F = np.fft.fftshift(np.fft.fft(DATA_R_F, axis=-3, n=VEL_FFT_SIZE), axes=-3)
     DATA_R_V_F_dB = 20 * np.log10(np.abs(DATA_R_V_F))
-
-    """ Plot """
-    FIG_RVFFT = create_multi_fig(fig_size=(80, 20))
-
-    NUM_ROW = 2
-    NUM_COL = NUM_VIRTUAL_ANTENNA
-    for k in range(NUM_VIRTUAL_ANTENNA):
-        SUB_FIG = k + 1
-        RX = k
-        TITLE = '2dFFT-R - ' + 'Rx' + str(RX)
-        X_LABEL = 'Range - Bin'
-        Y_LABEL = 'Magnitude - dB'
-        plot_sub_fig(RANGE_F_AXIS_N, DATA_R_V_F_dB[:, RX, :RANGE_FFT_SIZE//2], FIG_RVFFT, NUM_ROW, NUM_COL, SUB_FIG,
-                     TITLE, X_LABEL, Y_LABEL)
-
-        SUB_FIG = NUM_VIRTUAL_ANTENNA + k + 1
-        RX = k
-        TITLE = '2dFFT-V - ' + 'Rx' + str(RX)
-        X_LABEL = 'Velocity - Bin'
-        Y_LABEL = 'Magnitude - dB'
-        plot_sub_fig(VEL_F_AXIS_N, DATA_R_V_F_dB[:, RX, :RANGE_FFT_SIZE//2].T, FIG_RVFFT, NUM_ROW, NUM_COL, SUB_FIG,
-                     TITLE, X_LABEL, Y_LABEL)
-
-    if CFG['pdf_enable']:
-        FIG_RVFFT.savefig(os.path.join(SAVE_PATH, CURRENT_TIME + '_' + 'RVFFT_Frame' + str(SHOW_FRAME) + '.pdf'))
-
-    """ Plot """
-    FIG_RVFFT2d = create_multi_fig(fig_size=(80, 15))
-    NUM_ROW = 1
-    NUM_COL = NUM_VIRTUAL_ANTENNA
-    X, Y = np.meshgrid(RANGE_F_AXIS_N, VEL_F_AXIS_N)
-    for k in range(NUM_VIRTUAL_ANTENNA):
-        SUB_FIG = k + 1
-        RX = k
-        TITLE = '2dFFT-R - ' + 'Rx' + str(RX)
-        X_LABEL = 'Range - Bin'
-        Y_LABEL = 'Velocity - Bin'
-        plot_surface_sub_fig(X, Y, DATA_R_V_F_dB[:, RX, :RANGE_FFT_SIZE//2],
-                             FIG_RVFFT2d, NUM_ROW, NUM_COL, SUB_FIG,
-                             TITLE, X_LABEL, Y_LABEL)
-    FIG_RVFFT2d.tight_layout()
-
-    if CFG['pdf_enable']:
-        FIG_RVFFT2d.savefig(os.path.join(SAVE_PATH, CURRENT_TIME + '_' + 'RVFFT_Surface_Frame'
-                                         + str(SHOW_FRAME) + '.pdf'))
-    if CFG['pdf_enable']:
-        save_yaml(SAVE_PATH, CURRENT_TIME, CFG)
 
     """##############################################################################################################"""
     """ Average power """
@@ -401,42 +282,66 @@ if __name__ == '__main__':
             DATA_ALL_R_V_F_SUM = 1 / NUM_FRAME * np.sum(np.abs(DATA_ALL_R_V_F) ** 2, axis=0)
             DATA_ALL_R_V_F_SUM_dB = 10 * np.log10(np.abs(DATA_ALL_R_V_F_SUM))
 
-        FIG_RVAFFT = create_multi_fig(fig_size=(80, 35))
-
-        NUM_ROW = 3
-        NUM_COL = NUM_VIRTUAL_ANTENNA
-        for k in range(NUM_VIRTUAL_ANTENNA):
-            SUB_FIG = k + 1
-            RX = k
-            TITLE = 'Average 1dFFT' + ' - ' + 'Rx' + str(RX)
-            X_LABEL = 'Time - us'
-            Y_LABEL = 'Amplitude'
-            plot_sub_fig(RANGE_F_AXIS_N, DATA_ALL_R_F_SUM_dB[:, RX, :RANGE_FFT_SIZE // 2],
-                         FIG_RVAFFT, NUM_ROW, NUM_COL, SUB_FIG,
+    """##############################################################################################################"""
+    """ Plot """
+    FIG_ALL = create_multi_fig(fig_size=(80, 20))
+    NUM_ROW = 2
+    NUM_COL = NUM_VIRTUAL_ANTENNA
+    for k in range(NUM_VIRTUAL_ANTENNA):
+        SUB_FIG = k + 1
+        RX = k
+        TITLE = 'All Chirp' + ' - ' + 'Rx' + str(RX)
+        X_LABEL = 'Time - us'
+        Y_LABEL = 'Amplitude'
+        if CFG['dc_cal']:
+            plot_sub_fig(T_AXIS_N, DATA_DC_CAL[SHOW_FRAME, :, RX, :], FIG_ALL, NUM_ROW, NUM_COL, SUB_FIG,
+                         TITLE, X_LABEL, Y_LABEL)
+        else:
+            plot_sub_fig(T_AXIS_N, DATA[SHOW_FRAME, :, RX, :], FIG_ALL, NUM_ROW, NUM_COL, SUB_FIG,
                          TITLE, X_LABEL, Y_LABEL)
 
+        if CFG['average_frame']:
             SUB_FIG = NUM_VIRTUAL_ANTENNA + k + 1
             RX = k
             TITLE = 'Average 2dFFT-R - ' + 'Rx' + str(RX)
             X_LABEL = 'Range - Bin'
             Y_LABEL = 'Magnitude - dB'
             plot_sub_fig(RANGE_F_AXIS_N, DATA_ALL_R_V_F_SUM_dB[:, RX, :RANGE_FFT_SIZE // 2],
-                         FIG_RVAFFT, NUM_ROW, NUM_COL, SUB_FIG,
+                         FIG_ALL, NUM_ROW, NUM_COL, SUB_FIG,
                          TITLE, X_LABEL, Y_LABEL)
 
-            SUB_FIG = 2 * NUM_VIRTUAL_ANTENNA + k + 1
+            # SUB_FIG = 2 * NUM_VIRTUAL_ANTENNA + k + 1
+            # RX = k
+            # TITLE = 'Average 2dFFT-V - ' + 'Rx' + str(RX)
+            # X_LABEL = 'Velocity - Bin'
+            # Y_LABEL = 'Magnitude - dB'
+            # plot_sub_fig(VEL_F_AXIS_N, DATA_ALL_R_V_F_SUM_dB[:, RX, :RANGE_FFT_SIZE // 2].T,
+            #              FIG_ALL, NUM_ROW, NUM_COL, SUB_FIG,
+            #              TITLE, X_LABEL, Y_LABEL)
+        else:
+            SUB_FIG = NUM_VIRTUAL_ANTENNA + k + 1
             RX = k
-            TITLE = 'Average 2dFFT-V - ' + 'Rx' + str(RX)
-            X_LABEL = 'Velocity - Bin'
+            TITLE = 'Average 2dFFT-R - ' + 'Rx' + str(RX)
+            X_LABEL = 'Range - Bin'
             Y_LABEL = 'Magnitude - dB'
-            plot_sub_fig(VEL_F_AXIS_N, DATA_ALL_R_V_F_SUM_dB[:, RX, :RANGE_FFT_SIZE // 2].T,
-                         FIG_RVAFFT, NUM_ROW, NUM_COL, SUB_FIG,
+            plot_sub_fig(RANGE_F_AXIS_N, DATA_R_V_F_dB[:, RX, :RANGE_FFT_SIZE // 2],
+                         FIG_ALL, NUM_ROW, NUM_COL, SUB_FIG,
                          TITLE, X_LABEL, Y_LABEL)
 
-        if CFG['pdf_enable']:
-            FIG_RVAFFT.savefig(os.path.join(SAVE_PATH, CURRENT_TIME + '_' + 'RVAFFT_Frame' + str(SHOW_FRAME) + '.pdf'))
+            # SUB_FIG = 2 * NUM_VIRTUAL_ANTENNA + k + 1
+            # RX = k
+            # TITLE = 'Average 2dFFT-V - ' + 'Rx' + str(RX)
+            # X_LABEL = 'Velocity - Bin'
+            # Y_LABEL = 'Magnitude - dB'
+            # plot_sub_fig(VEL_F_AXIS_N, DATA_R_V_F_dB[:, RX, :RANGE_FFT_SIZE // 2].T,
+            #              FIG_ALL, NUM_ROW, NUM_COL, SUB_FIG,
+            #              TITLE, X_LABEL, Y_LABEL)
+    if CFG['pdf_enable']:
+        FIG_ALL.savefig(os.path.join(SAVE_PATH, CURRENT_TIME + '_' + 'ALL.pdf'))
+
+    if CFG['pdf_enable']:
+        save_yaml(SAVE_PATH, CURRENT_TIME, CFG)
 
     """##############################################################################################################"""
     if not CFG['pdf_enable']:
         plt.show()
-    # max_index = np.unravel_index(np.argmax(sig_mat_dB, axis=None), sig_mat_dB.shape)
