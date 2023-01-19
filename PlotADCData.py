@@ -9,8 +9,8 @@ from scipy import signal
 CURRENT_TIME = time.strftime('%Y%m%d_%H%M%S')
 
 font_times = fm.FontProperties(family='Times New Roman', stretch=0)
-current_path = os.path.dirname(__file__)
-sys.path.append(os.path.join(current_path, '..'))
+CURRENT_PATH = os.path.dirname(__file__)
+sys.path.append(os.path.join(CURRENT_PATH, '..'))
 
 TITLE_FONT = 25
 LABEL_FONT = 22
@@ -19,7 +19,7 @@ TICK_FONT = 20
 
 
 def save_yaml(save_path, current_time, cfg):
-    with open(os.path.join(SAVE_PATH, CURRENT_TIME + '_' + 'config.yaml'), 'w', encoding='utf-8') as f:
+    with open(os.path.join(save_path, current_time + '_' + 'config.yaml'), 'w', encoding='utf-8') as f:
         for k, v in cfg.items():
             f.write(k + ': ' + str(v) + '\n')
 
@@ -45,7 +45,7 @@ def chebyshev(num_order, param):
     return win
 
 
-def mkdir(file_name):
+def mkdir(current_path, file_name):
     save_path = os.path.join(current_path, file_name)
     folder = os.path.exists(save_path)
     if not folder:
@@ -206,7 +206,7 @@ if __name__ == '__main__':
     FILENAME = re.split(r'\.', FILE_NAME)[0]
 
     if CFG['pdf_enable']:
-        SAVE_PATH = mkdir(FILENAME)
+        SAVE_PATH = mkdir(CFG['data_path'], FILENAME)
 
     SHOW_FRAME = CFG['show_frame']
     SAMPLE_RATE = CFG['sample_rate'] * 1e6
